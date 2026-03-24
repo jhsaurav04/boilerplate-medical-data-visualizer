@@ -3,58 +3,86 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 1
-df = None
+#  Load Data 
+df = pd.read_csv('medical_examination.csv')
 
-# 2
-df['overweight'] = None
+# ── Add Overweight Column 
+# BMI = weight(kg) / height(m)^2  →  overweight if BMI > 25
+df['overweight'] = (df['weight'] / (df['height'] / 100) ** 2 > 25).astype(int)
 
-# 3
+# ── Normalize cholesterol and gluc 
+# 0 = good (value == 1), 1 = bad (value > 1)
+df['cholesterol'] = (df['cholesterol'] > 1).astype(int)
+df['gluc']        = (df['gluc'] > 1).astype(int)
 
 
-# 4
+# FIGURE 1 — Categorical Plot
+# ══════════════════════════════════════════════════════════════════════════════
 def draw_cat_plot():
-    # 5
-    df_cat = None
 
+    # Melt the dataframe: each row becomes one variable-value pair
+    df_cat = pd.melt(
+        df,
+        id_vars    = ['cardio'],
+        value_vars = ['cholesterol', 'gluc', 'smoke', 'alco', 'active', 'overweight']
+    )
 
-    # 6
-    df_cat = None
-    
+    # Count occurrences of each value (0 or 1) for each variable, split by cardio
+    df_cat = df_cat.groupby(['cardio', 'variable', 'value']) \
+                   .size() \
+                   .reset_index(name='total')
 
-    # 7
+    # Draw the categorical plot
+    fig = sns.catplot(
+        data    = df_cat,
+        x       = 'variable',
+        y       = 'total',
+        hue     = 'value',
+        col     = 'cardio',
+        kind    = 'bar',
+        height  = 5,
+        aspect  = 1
+    ).fig
 
-
-
-    # 8
-    fig = None
-
-
-    # 9
     fig.savefig('catplot.png')
     return fig
 
 
-# 10
+# FIGURE 2 — Heatmap
+# ══════════════════════════════════════════════════════════════════════════════
 def draw_heat_map():
-    # 11
-    df_heat = None
 
-    # 12
-    corr = None
+    # ── Clean the data ─────────────────────────────────────────────────────────
+    df_heat = df[
+        (df['ap_lo']  <= df['ap_hi'])                        &  # diastolic ≤ systolic
+        (df['height'] >= df['height'].quantile(0.025))       &  # remove height outliers
+        (df['height'] <= df['height'].quantile(0.975))       &
+        (df['weight'] >= df['weight'].quantile(0.025))       &  # remove weight outliers
+        (df['weight'] <= df['weight'].quantile(0.975))
+    ]
 
-    # 13
-    mask = None
+    # ── Correlation matrix
+    corr = df_heat.corr()
 
+    # ── Mask upper triangle (avoid duplicate info) 
+    mask = np.triu(np.ones_like(corr, dtype=bool))
 
+    # ── Plot 
+    fig, ax = plt.subplots(figsize=(12, 10))
 
-    # 14
-    fig, ax = None
+    sns.heatmap(
+        corr,
+        mask       = mask,
+        annot      = True,
+        fmt        = '.1f',
+        center     = 0,
+        vmin       = -0.16,
+        vmax       = 0.32,
+        square     = True,
+        linewidths = 0.5,
+        ax         = ax,
+        cbar_kws   = {'shrink': 0.5}
+    )
 
-    # 15
-
-
-
-    # 16
     fig.savefig('heatmap.png')
     return fig

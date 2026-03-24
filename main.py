@@ -1,10 +1,22 @@
-# This entrypoint file to be used in development. Start by reading README.md
-import medical_data_visualizer
-from unittest import main
+from medical_data_visualizer import draw_cat_plot, draw_heat_map
+import unittest
+import test_module
 
-# Test your function by calling it here
-medical_data_visualizer.draw_cat_plot()
-medical_data_visualizer.draw_heat_map()
+print("=" * 60)
+print("Generating Categorical Plot...")
+print("=" * 60)
+draw_cat_plot()
+print("catplot.png saved ✅")
 
-# Run unit tests automatically
-main(module='test_module', exit=False)
+print()
+print("=" * 60)
+print("Generating Heatmap...")
+print("=" * 60)
+draw_heat_map()
+print("heatmap.png saved ✅")
+
+print()
+print("=" * 60)
+print("RUNNING UNIT TESTS")
+print("=" * 60)
+unittest.main(module=test_module, argv=[''], verbosity=2, exit=False)
